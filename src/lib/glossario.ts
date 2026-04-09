@@ -135,9 +135,10 @@ export const GLOSSARIO: Record<string, Termo> = {
     curto:
       'O mesmo cliente não consegue avaliar o mesmo GR duas vezes em 24h — checagem em 3 camadas (cookie, fingerprint e IP+navegador).',
     longo: [
-      'Para proteger o indicador contra reavaliações do mesmo cliente, o Voxis bloqueia novas avaliações do mesmo GR pelo mesmo cliente dentro de uma janela de 24h.',
-      'A checagem usa 3 camadas que atuam em OR lógico: (1) cookie HTTP-only gravado após o envio, (2) fingerprint do dispositivo calculado no navegador, e (3) combinação de hash do IP e do user agent. Qualquer uma que bata é suficiente para bloquear.',
-      'Essa abordagem em camadas cobre até mesmo o caso de alguém abrir uma janela anônima tentando "resetar" a proteção — o IP e o user agent continuam os mesmos entre modos do navegador.',
+      'Para proteger o indicador contra reavaliações do mesmo cliente, o Voxis bloqueia novas avaliações do mesmo GR pelo mesmo cliente.',
+      'A checagem usa 3 camadas em OR lógico: (1) cookie HTTP-only gravado após o envio, (2) fingerprint do dispositivo calculado no navegador, e (3) combinação de hash do IP e do user agent. Qualquer uma que bata é suficiente para bloquear.',
+      'No nível do banco de dados, duas unique constraints — em (gerente, dispositivo) e em (gerente, IP, navegador) — garantem atomicidade mesmo contra ataques de concorrência: abrir várias abas simultaneamente do mesmo QR, por exemplo. Apenas uma das requisições grava; as demais recebem erro 429.',
+      'Essa abordagem cobre até mesmo o caso de alguém abrir uma janela anônima tentando "resetar" a proteção — o IP e o user agent continuam os mesmos entre modos do navegador.',
     ],
   },
   periodo: {

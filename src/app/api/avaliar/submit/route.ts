@@ -74,7 +74,11 @@ export async function POST(request: Request) {
     const status: 'VALIDA' | 'QUARENTENA' = rajada ? 'QUARENTENA' : 'VALIDA'
     const motivoQuarentena = rajada ? 'RAJADA_10MIN' : null
 
-    // 5. Inserir avaliação
+    // 5. Inserir avaliação. Unique indexes em (gr_id, device) e
+    //    (gr_id, ip, ua) garantem atomicidade em caso de submits
+    //    concorrentes — uma violação 23505 significa que outra requisição
+    //    do mesmo cliente já gravou antes, então respondemos 429 como se o
+    //    rate limit tivesse pegado.
     const { data: avaliacao, error: insErr } = await supabase
       .from('avaliacao')
       .insert({
@@ -91,8 +95,30 @@ export async function POST(request: Request) {
       .select('id')
       .single()
 
-    if (insErr || !avaliacao) {
+    if (insErr) {
+      // Código 23505 = unique_violation no Postgres
+      if (insErr.code === '23505') {
+        // Grava o cookie mesmo assim — impede novas tentativas dessa aba
+        cookieStore.set(nomeCookie, '1', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: VINTE_QUATRO_HORAS_SEG,
+          path: '/',
+        })
+        return NextResponse.json(
+          { error: 'Avaliação já registrada nas últimas 24h' },
+          { status: 429 }
+        )
+      }
       console.error('[submit] insert avaliacao:', insErr)
+      return NextResponse.json(
+        { error: 'Erro ao salvar avaliação' },
+        { status: 500 }
+      )
+    }
+
+    if (!avaliacao) {
       return NextResponse.json(
         { error: 'Erro ao salvar avaliação' },
         { status: 500 }

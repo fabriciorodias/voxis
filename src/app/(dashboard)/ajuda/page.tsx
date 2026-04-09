@@ -49,7 +49,7 @@ const FAQ = [
   },
   {
     p: 'Como o Voxis impede que alguém manipule o NPS?',
-    r: 'Quatro camadas. Primeiro, o rate limit de 24h bloqueia reavaliações do mesmo cliente para o mesmo GR, usando cookie HTTP-only + fingerprint do dispositivo + hash de IP e user agent em OR lógico — cobre até janela anônima do navegador, porque o IP e o user agent são idênticos entre modos. Segundo, a detecção de rajada: 5+ respostas ao mesmo GR em menos de 10min vão direto para quarentena. Terceiro, revisão humana da quarentena por direção ou gestor. Quarto, o GR não é usuário do sistema e não controla quando o cliente avalia.',
+    r: 'Cinco camadas. (1) Rate limit por cliente: bloqueia reavaliações do mesmo cliente para o mesmo GR usando cookie HTTP-only + fingerprint do dispositivo + hash de IP e user agent em OR lógico — cobre até janela anônima do navegador. (2) Unique constraints no banco: mesmo que alguém abra várias abas simultaneamente do mesmo QR tentando burlar o rate limit via concorrência, o banco garante atomicidade e apenas uma avaliação é gravada. (3) Detecção automática de rajada: 5+ respostas ao mesmo GR em menos de 10min vão direto pra quarentena. (4) Revisão humana da quarentena por direção ou gestor. (5) O GR não é usuário do sistema — não controla quando o cliente avalia nem tem acesso ao painel.',
   },
   {
     p: 'O gerente pode ver seu próprio NPS?',
