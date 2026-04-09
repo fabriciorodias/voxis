@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requerirPerfil } from '@/lib/auth'
 
 export async function criarGerente(formData: FormData) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const nome = String(formData.get('nome') ?? '').trim()
   const matricula = String(formData.get('matricula') ?? '').trim() || null
   const agenciaId = String(formData.get('agencia_id') ?? '')
@@ -51,7 +51,7 @@ export async function criarGerente(formData: FormData) {
 }
 
 export async function atualizarGerente(formData: FormData) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const id = String(formData.get('id') ?? '')
   const nome = String(formData.get('nome') ?? '').trim()
   const matricula = String(formData.get('matricula') ?? '').trim() || null
@@ -71,7 +71,7 @@ export async function atualizarGerente(formData: FormData) {
 }
 
 export async function alternarGerente(id: string, ativo: boolean) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const supabase = await createClient()
   const { error } = await supabase
     .from('gerente_relacionamento')
@@ -90,7 +90,7 @@ export async function alternarGerente(id: string, ativo: boolean) {
  * Fecha o vínculo atual (fim_em = now) e cria um novo.
  */
 export async function transferirGerente(formData: FormData) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const grId = String(formData.get('gr_id') ?? '')
   const novaAgenciaId = String(formData.get('nova_agencia_id') ?? '')
 

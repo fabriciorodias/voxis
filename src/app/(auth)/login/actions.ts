@@ -40,9 +40,8 @@ export async function login(formData: FormData) {
 
   switch (usuario.perfil) {
     case 'ADMIN':
-      redirect('/admin')
     case 'DIRECAO':
-      redirect('/direcao')
+      redirect('/painel')
     case 'GESTOR_AGENCIA':
       redirect('/agencia')
     default:

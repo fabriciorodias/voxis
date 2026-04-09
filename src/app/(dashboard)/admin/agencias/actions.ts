@@ -7,7 +7,7 @@ import { requerirPerfil } from '@/lib/auth'
 // ---------- Superintendência ----------
 
 export async function criarSuperintendencia(formData: FormData) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const nome = String(formData.get('nome') ?? '').trim()
   const codigo = String(formData.get('codigo') ?? '').trim() || null
 
@@ -26,7 +26,7 @@ export async function criarSuperintendencia(formData: FormData) {
 }
 
 export async function atualizarSuperintendencia(formData: FormData) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const id = String(formData.get('id') ?? '')
   const nome = String(formData.get('nome') ?? '').trim()
   const codigo = String(formData.get('codigo') ?? '').trim() || null
@@ -46,7 +46,7 @@ export async function atualizarSuperintendencia(formData: FormData) {
 }
 
 export async function alternarSuperintendencia(id: string, ativo: boolean) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const supabase = await createClient()
   const { error } = await supabase
     .from('superintendencia')
@@ -62,7 +62,7 @@ export async function alternarSuperintendencia(id: string, ativo: boolean) {
 // ---------- Agência ----------
 
 export async function criarAgencia(formData: FormData) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const nome = String(formData.get('nome') ?? '').trim()
   const codigo = String(formData.get('codigo') ?? '').trim()
   const municipio = String(formData.get('municipio') ?? '').trim() || null
@@ -91,7 +91,7 @@ export async function criarAgencia(formData: FormData) {
 }
 
 export async function atualizarAgencia(formData: FormData) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const id = String(formData.get('id') ?? '')
   const nome = String(formData.get('nome') ?? '').trim()
   const codigo = String(formData.get('codigo') ?? '').trim()
@@ -124,7 +124,7 @@ export async function atualizarAgencia(formData: FormData) {
 }
 
 export async function alternarAgencia(id: string, ativo: boolean) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const supabase = await createClient()
   const { error } = await supabase
     .from('agencia')

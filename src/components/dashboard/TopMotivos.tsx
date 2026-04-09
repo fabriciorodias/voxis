@@ -1,8 +1,12 @@
+import Link from 'next/link'
+import type { LinhaTopMotivo } from '@/lib/queries'
+
 type Props = {
-  dados: { texto: string; count: number }[]
+  dados: LinhaTopMotivo[]
+  linkBase?: string // ex: "/painel/motivo"
 }
 
-export function TopMotivos({ dados }: Props) {
+export function TopMotivos({ dados, linkBase }: Props) {
   const max = Math.max(...dados.map((d) => d.count), 1)
 
   return (
@@ -16,22 +20,43 @@ export function TopMotivos({ dados }: Props) {
         </p>
       ) : (
         <div className="space-y-2">
-          {dados.map((m) => (
-            <div key={m.texto}>
-              <div className="mb-1 flex items-center justify-between text-sm">
-                <span className="text-gray-700">{m.texto}</span>
-                <span className="font-mono text-xs text-gray-500">
-                  {m.count}
-                </span>
+          {dados.map((m) => {
+            const corpo = (
+              <>
+                <div className="mb-1 flex items-center justify-between text-sm">
+                  <span className="text-gray-700 group-hover:text-gray-900">
+                    {m.texto}
+                  </span>
+                  <span className="font-mono text-xs text-gray-500">
+                    {m.count}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded bg-gray-100">
+                  <div
+                    className="h-full bg-[var(--color-primary)]"
+                    style={{ width: `${(m.count / max) * 100}%` }}
+                  />
+                </div>
+              </>
+            )
+
+            if (linkBase) {
+              return (
+                <Link
+                  key={m.id}
+                  href={`${linkBase}/${m.id}`}
+                  className="group block rounded-md px-1 py-1 -mx-1 transition hover:bg-gray-50"
+                >
+                  {corpo}
+                </Link>
+              )
+            }
+            return (
+              <div key={m.id} className="group">
+                {corpo}
               </div>
-              <div className="h-2 overflow-hidden rounded bg-gray-100">
-                <div
-                  className="h-full bg-[var(--color-primary)]"
-                  style={{ width: `${(m.count / max) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

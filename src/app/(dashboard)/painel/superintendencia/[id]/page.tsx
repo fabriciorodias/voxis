@@ -3,20 +3,18 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { requerirPerfil } from '@/lib/auth'
 import {
-  getNPSPorAgencia,
-  getRankingGRs,
+  getNPSPorSuperintendencia,
+  getRankingAgencias,
   getDistribuicaoNotas,
   getTopMotivos,
   getEvolucaoNPS,
-  getAnomaliasAbertas,
   type Periodo,
 } from '@/lib/queries'
 import { CardNPS } from '@/components/dashboard/CardNPS'
-import { RankingGRs } from '@/components/dashboard/RankingGRs'
+import { RankingAgencias } from '@/components/dashboard/RankingAgencias'
 import { GraficoDistribuicao } from '@/components/dashboard/GraficoDistribuicao'
 import { TopMotivos } from '@/components/dashboard/TopMotivos'
 import { GraficoEvolucao } from '@/components/dashboard/GraficoEvolucao'
-import { AlertaAnomalia } from '@/components/dashboard/AlertaAnomalia'
 import { FiltroPeriodo } from '@/components/dashboard/FiltroPeriodo'
 
 type Props = {
@@ -26,7 +24,7 @@ type Props = {
 
 const PERIODOS_VALIDOS: Periodo[] = ['7d', '30d', '90d', '12m']
 
-export default async function DrillDownAgencia({
+export default async function DrillDownSuperintendencia({
   params,
   searchParams,
 }: Props) {
@@ -39,65 +37,55 @@ export default async function DrillDownAgencia({
 
   const supabase = await createClient()
 
-  const { data: agencia } = await supabase
-    .from('agencia')
-    .select('id, nome, codigo, municipio, uf, superintendencia_id')
+  const { data: sup } = await supabase
+    .from('superintendencia')
+    .select('id, nome, codigo')
     .eq('id', id)
     .eq('banco_id', usuario.banco_id)
     .single()
 
-  if (!agencia) notFound()
+  if (!sup) notFound()
 
-  const { data: sup } = agencia.superintendencia_id
-    ? await supabase
-        .from('superintendencia')
-        .select('nome')
-        .eq('id', agencia.superintendencia_id)
-        .single()
-    : { data: null }
-
-  const [nps, ranking, distribuicao, motivos, evolucao, anomalias] =
-    await Promise.all([
-      getNPSPorAgencia(supabase, agencia.id, periodo),
-      getRankingGRs(supabase, agencia.id, periodo),
-      getDistribuicaoNotas(supabase, { agenciaId: agencia.id }, periodo),
-      getTopMotivos(supabase, { agenciaId: agencia.id }, periodo),
-      getEvolucaoNPS(supabase, { agenciaId: agencia.id }, periodo),
-      getAnomaliasAbertas(supabase, {
-        bancoId: usuario.banco_id,
-        agenciaId: agencia.id,
-      }),
-    ])
+  const [nps, ranking, distribuicao, motivos, evolucao] = await Promise.all([
+    getNPSPorSuperintendencia(supabase, sup.id, periodo),
+    getRankingAgencias(supabase, usuario.banco_id, periodo, {
+      superintendenciaId: sup.id,
+    }),
+    getDistribuicaoNotas(
+      supabase,
+      { superintendenciaId: sup.id },
+      periodo
+    ),
+    getTopMotivos(supabase, { superintendenciaId: sup.id }, periodo),
+    getEvolucaoNPS(supabase, { superintendenciaId: sup.id }, periodo),
+  ])
 
   return (
     <div>
       <div className="mb-2 text-xs text-gray-400">
-        <Link href="/direcao" className="hover:text-gray-700">
-          ← Direção
+        <Link href="/painel" className="hover:text-gray-700">
+          ← Painel
         </Link>
       </div>
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{agencia.nome}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{sup.nome}</h1>
           <p className="text-sm text-gray-500">
-            Código {agencia.codigo}
-            {agencia.municipio && ` · ${agencia.municipio}`}
-            {agencia.uf && `/${agencia.uf}`}
-            {sup && ` · ${sup.nome}`}
+            {sup.codigo ? `Código ${sup.codigo} · ` : ''}
+            Superintendência · {ranking.length}{' '}
+            {ranking.length === 1 ? 'agência' : 'agências'}
           </p>
         </div>
         <FiltroPeriodo
           atual={periodo}
-          basePath={`/direcao/agencia/${agencia.id}`}
+          basePath={`/painel/superintendencia/${sup.id}`}
         />
       </header>
-
-      <AlertaAnomalia total={anomalias.length} href="/agencia/anomalias" />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-1">
           <CardNPS
-            titulo="NPS da agência"
+            titulo="NPS da superintendência"
             dados={nps}
             subtitulo="vs. período anterior"
           />
@@ -107,17 +95,17 @@ export default async function DrillDownAgencia({
         </div>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <RankingGRs linhas={ranking} />
-        </div>
-        <div className="lg:col-span-1">
-          <TopMotivos dados={motivos} />
-        </div>
+      <div className="mt-5">
+        <RankingAgencias linhas={ranking} linkBase="/painel/agencia" />
       </div>
 
-      <div className="mt-5">
-        <GraficoEvolucao dados={evolucao} />
+      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <GraficoEvolucao dados={evolucao} />
+        </div>
+        <div className="lg:col-span-1">
+          <TopMotivos dados={motivos} linkBase="/painel/motivo" />
+        </div>
       </div>
     </div>
   )

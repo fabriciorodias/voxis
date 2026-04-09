@@ -4,7 +4,7 @@ import { getAppUrl } from '@/lib/appUrl'
 import { GerentesClient } from './GerentesClient'
 
 export default async function GerentesPage() {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const supabase = await createClient()
 
   const [{ data: gerentes }, { data: agencias }] = await Promise.all([

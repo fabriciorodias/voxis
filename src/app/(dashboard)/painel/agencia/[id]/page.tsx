@@ -1,6 +1,7 @@
-import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getUsuarioAtual } from '@/lib/auth'
+import { requerirPerfil } from '@/lib/auth'
 import {
   getNPSPorAgencia,
   getRankingGRs,
@@ -19,30 +20,18 @@ import { AlertaAnomalia } from '@/components/dashboard/AlertaAnomalia'
 import { FiltroPeriodo } from '@/components/dashboard/FiltroPeriodo'
 
 type Props = {
+  params: Promise<{ id: string }>
   searchParams: Promise<{ periodo?: string }>
 }
 
 const PERIODOS_VALIDOS: Periodo[] = ['7d', '30d', '90d', '12m']
 
-export default async function AgenciaHome({ searchParams }: Props) {
-  const usuario = await getUsuarioAtual()
-
-  // Admin/Direção não têm "minha agência" — redireciona pra direção
-  if (usuario.perfil !== 'GESTOR_AGENCIA') {
-    redirect('/painel')
-  }
-
-  if (!usuario.agencia_id) {
-    return (
-      <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
-        <p className="text-sm text-gray-500">
-          Seu perfil de gestor não está vinculado a nenhuma agência. Contate o
-          administrador.
-        </p>
-      </div>
-    )
-  }
-
+export default async function DrillDownAgencia({
+  params,
+  searchParams,
+}: Props) {
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
+  const { id } = await params
   const sp = await searchParams
   const periodo: Periodo = PERIODOS_VALIDOS.includes(sp.periodo as Periodo)
     ? (sp.periodo as Periodo)
@@ -50,47 +39,68 @@ export default async function AgenciaHome({ searchParams }: Props) {
 
   const supabase = await createClient()
 
-  const [{ data: agencia }, nps, ranking, distribuicao, motivos, evolucao, anomalias] =
+  const { data: agencia } = await supabase
+    .from('agencia')
+    .select('id, nome, codigo, municipio, uf, superintendencia_id')
+    .eq('id', id)
+    .eq('banco_id', usuario.banco_id)
+    .single()
+
+  if (!agencia) notFound()
+
+  const { data: sup } = agencia.superintendencia_id
+    ? await supabase
+        .from('superintendencia')
+        .select('nome')
+        .eq('id', agencia.superintendencia_id)
+        .single()
+    : { data: null }
+
+  const [nps, ranking, distribuicao, motivos, evolucao, anomalias] =
     await Promise.all([
-      supabase
-        .from('agencia')
-        .select('nome, codigo')
-        .eq('id', usuario.agencia_id)
-        .single(),
-      getNPSPorAgencia(supabase, usuario.agencia_id, periodo),
-      getRankingGRs(supabase, usuario.agencia_id, periodo),
-      getDistribuicaoNotas(
-        supabase,
-        { agenciaId: usuario.agencia_id },
-        periodo
-      ),
-      getTopMotivos(supabase, { agenciaId: usuario.agencia_id }, periodo),
-      getEvolucaoNPS(supabase, { agenciaId: usuario.agencia_id }, periodo),
+      getNPSPorAgencia(supabase, agencia.id, periodo),
+      getRankingGRs(supabase, agencia.id, periodo),
+      getDistribuicaoNotas(supabase, { agenciaId: agencia.id }, periodo),
+      getTopMotivos(supabase, { agenciaId: agencia.id }, periodo),
+      getEvolucaoNPS(supabase, { agenciaId: agencia.id }, periodo),
       getAnomaliasAbertas(supabase, {
         bancoId: usuario.banco_id,
-        agenciaId: usuario.agencia_id,
+        agenciaId: agencia.id,
       }),
     ])
 
   return (
     <div>
+      <div className="mb-2 text-xs text-gray-400">
+        <Link href="/painel" className="hover:text-gray-700">
+          ← Direção
+        </Link>
+      </div>
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {agencia?.nome ?? 'Minha agência'}
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">{agencia.nome}</h1>
           <p className="text-sm text-gray-500">
-            {agencia?.codigo ? `Código ${agencia.codigo} · ` : ''}Visão do gestor
+            Código {agencia.codigo}
+            {agencia.municipio && ` · ${agencia.municipio}`}
+            {agencia.uf && `/${agencia.uf}`}
+            {sup && ` · ${sup.nome}`}
           </p>
         </div>
-        <FiltroPeriodo atual={periodo} basePath="/agencia" />
+        <FiltroPeriodo
+          atual={periodo}
+          basePath={`/painel/agencia/${agencia.id}`}
+        />
       </header>
 
       <AlertaAnomalia total={anomalias.length} href="/agencia/anomalias" />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-1">
-          <CardNPS titulo="NPS da agência" dados={nps} subtitulo="vs. período anterior" />
+          <CardNPS
+            titulo="NPS da agência"
+            dados={nps}
+            subtitulo="vs. período anterior"
+          />
         </div>
         <div className="lg:col-span-2">
           <GraficoDistribuicao dados={distribuicao} />

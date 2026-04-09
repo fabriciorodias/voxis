@@ -3,7 +3,7 @@ import { requerirPerfil } from '@/lib/auth'
 import { MotivosClient } from './MotivosClient'
 
 export default async function MotivosPage() {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const supabase = await createClient()
 
   const { data: motivos } = await supabase

@@ -3,7 +3,7 @@ import { requerirPerfil } from '@/lib/auth'
 import { AgenciasClient } from './AgenciasClient'
 
 export default async function AgenciasPage() {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const supabase = await createClient()
 
   const [{ data: superintendencias }, { data: agencias }] = await Promise.all([

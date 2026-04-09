@@ -28,13 +28,13 @@ const CARDS = [
   },
 ]
 
-export default function AdminHome() {
+export default function ConfiguracoesHome() {
   return (
     <div>
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Administração</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Configurações</h1>
         <p className="text-sm text-gray-500">
-          Configurações da instância e cadastros principais.
+          Cadastros e preferências da instância.
         </p>
       </header>
 

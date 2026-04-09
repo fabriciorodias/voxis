@@ -3,23 +3,42 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '../(auth)/login/actions'
 
+type PerfilNav = 'ADMIN' | 'DIRECAO' | 'GESTOR_AGENCIA'
+
 type ItemNav = {
   href: string
   label: string
-  perfis: Array<'ADMIN' | 'DIRECAO' | 'GESTOR_AGENCIA'>
+  perfis: PerfilNav[]
 }
 
-const NAV: ItemNav[] = [
-  { href: '/admin/agencias', label: 'Agências', perfis: ['ADMIN'] },
-  { href: '/admin/gerentes', label: 'Gerentes', perfis: ['ADMIN'] },
-  { href: '/admin/motivos', label: 'Motivos', perfis: ['ADMIN'] },
-  { href: '/admin/tema', label: 'Tema', perfis: ['ADMIN'] },
-  { href: '/admin/usuarios', label: 'Usuários', perfis: ['ADMIN'] },
-  { href: '/direcao', label: 'Direção', perfis: ['ADMIN', 'DIRECAO'] },
+type GrupoNav = {
+  label: string
+  href?: string
+  perfis: PerfilNav[]
+  itens?: ItemNav[]
+}
+
+const NAV: GrupoNav[] = [
   {
-    href: '/agencia',
+    label: 'Painel',
+    href: '/painel',
+    perfis: ['ADMIN', 'DIRECAO'],
+  },
+  {
+    label: 'Configurações',
+    perfis: ['ADMIN', 'DIRECAO'],
+    itens: [
+      { href: '/admin/agencias', label: 'Agências', perfis: ['ADMIN', 'DIRECAO'] },
+      { href: '/admin/gerentes', label: 'Gerentes', perfis: ['ADMIN', 'DIRECAO'] },
+      { href: '/admin/motivos', label: 'Motivos', perfis: ['ADMIN', 'DIRECAO'] },
+      { href: '/admin/tema', label: 'Tema', perfis: ['ADMIN', 'DIRECAO'] },
+      { href: '/admin/usuarios', label: 'Usuários', perfis: ['ADMIN', 'DIRECAO'] },
+    ],
+  },
+  {
     label: 'Minha agência',
-    perfis: ['ADMIN', 'DIRECAO', 'GESTOR_AGENCIA'],
+    href: '/agencia',
+    perfis: ['GESTOR_AGENCIA'],
   },
 ]
 
@@ -43,8 +62,8 @@ export default async function DashboardLayout({
 
   if (!usuario) redirect('/login')
 
-  const perfil = usuario.perfil as 'ADMIN' | 'DIRECAO' | 'GESTOR_AGENCIA'
-  const itensVisiveis = NAV.filter((i) => i.perfis.includes(perfil))
+  const perfil = usuario.perfil as PerfilNav
+  const gruposVisiveis = NAV.filter((g) => g.perfis.includes(perfil))
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -54,16 +73,29 @@ export default async function DashboardLayout({
             <Link href="/" className="text-lg font-bold text-gray-900">
               Voxis
             </Link>
-            <nav className="hidden gap-4 md:flex">
-              {itensVisiveis.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  {item.label}
-                </Link>
-              ))}
+            <nav className="hidden items-center gap-5 md:flex">
+              {gruposVisiveis.map((grupo) => {
+                if (grupo.itens && grupo.itens.length > 0) {
+                  return (
+                    <GrupoDropdown
+                      key={grupo.label}
+                      label={grupo.label}
+                      itens={grupo.itens.filter((i) =>
+                        i.perfis.includes(perfil)
+                      )}
+                    />
+                  )
+                }
+                return (
+                  <Link
+                    key={grupo.label}
+                    href={grupo.href ?? '/'}
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    {grupo.label}
+                  </Link>
+                )
+              })}
             </nav>
           </div>
           <div className="flex items-center gap-3">
@@ -83,19 +115,77 @@ export default async function DashboardLayout({
         </div>
         {/* Nav mobile */}
         <nav className="flex gap-4 overflow-x-auto border-t border-gray-100 px-4 py-2 md:hidden">
-          {itensVisiveis.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="shrink-0 text-sm text-gray-600 hover:text-gray-900"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {gruposVisiveis.flatMap((grupo) => {
+            if (grupo.itens && grupo.itens.length > 0) {
+              return grupo.itens
+                .filter((i) => i.perfis.includes(perfil))
+                .map((i) => (
+                  <Link
+                    key={i.href}
+                    href={i.href}
+                    className="shrink-0 text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    {i.label}
+                  </Link>
+                ))
+            }
+            return [
+              <Link
+                key={grupo.label}
+                href={grupo.href ?? '/'}
+                className="shrink-0 text-sm text-gray-600 hover:text-gray-900"
+              >
+                {grupo.label}
+              </Link>,
+            ]
+          })}
         </nav>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+    </div>
+  )
+}
+
+function GrupoDropdown({
+  label,
+  itens,
+}: {
+  label: string
+  itens: { href: string; label: string }[]
+}) {
+  return (
+    <div className="group relative">
+      <button
+        type="button"
+        className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+      >
+        {label}
+        <svg
+          className="h-3 w-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      <div className="invisible absolute left-0 top-full z-40 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
+        {itens.map((i) => (
+          <Link
+            key={i.href}
+            href={i.href}
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            {i.label}
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }

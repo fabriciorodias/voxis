@@ -3,7 +3,7 @@ import { requerirPerfil } from '@/lib/auth'
 import { TemaClient } from './TemaClient'
 
 export default async function TemaPage() {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const supabase = await createClient()
 
   const { data: tema } = await supabase

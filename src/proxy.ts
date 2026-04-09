@@ -44,7 +44,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Buscar perfil do usuário
   const { data: usuario } = await supabase
     .from('usuario')
     .select('perfil, agencia_id')
@@ -57,11 +56,8 @@ export async function proxy(request: NextRequest) {
 
   // Raiz: encaminhar pra rota do perfil
   if (pathname === '/') {
-    if (usuario.perfil === 'ADMIN') {
-      return NextResponse.redirect(new URL('/admin', request.url))
-    }
-    if (usuario.perfil === 'DIRECAO') {
-      return NextResponse.redirect(new URL('/direcao', request.url))
+    if (usuario.perfil === 'ADMIN' || usuario.perfil === 'DIRECAO') {
+      return NextResponse.redirect(new URL('/painel', request.url))
     }
     if (usuario.perfil === 'GESTOR_AGENCIA') {
       return NextResponse.redirect(new URL('/agencia', request.url))
@@ -69,21 +65,27 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Proteção por perfil
-  if (pathname.startsWith('/admin') && usuario.perfil !== 'ADMIN') {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+  // /admin/* — configurações: ADMIN + DIRECAO
   if (
-    pathname.startsWith('/direcao') &&
+    pathname.startsWith('/admin') &&
     !['ADMIN', 'DIRECAO'].includes(usuario.perfil)
   ) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
+  // /painel/* — relatórios: ADMIN + DIRECAO
   if (
-    pathname.startsWith('/agencia') &&
-    !['ADMIN', 'DIRECAO', 'GESTOR_AGENCIA'].includes(usuario.perfil)
+    pathname.startsWith('/painel') &&
+    !['ADMIN', 'DIRECAO'].includes(usuario.perfil)
   ) {
     return NextResponse.redirect(new URL('/login', request.url))
+  }
+  // /agencia/* — dashboard da própria agência: GESTOR_AGENCIA apenas
+  // ADMIN/DIRECAO acessam agências via /painel/agencia/[id] (drill-down)
+  if (
+    pathname.startsWith('/agencia') &&
+    usuario.perfil !== 'GESTOR_AGENCIA'
+  ) {
+    return NextResponse.redirect(new URL('/painel', request.url))
   }
 
   return response

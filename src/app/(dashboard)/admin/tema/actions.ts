@@ -19,7 +19,7 @@ function ehUrl(valor: string): boolean {
 }
 
 export async function salvarTema(formData: FormData) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
 
   const corPrimaria = String(formData.get('cor_primaria') ?? '').trim()
   const corSecundaria = String(formData.get('cor_secundaria') ?? '').trim()

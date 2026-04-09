@@ -19,7 +19,7 @@ async function contarAtivos(
 }
 
 export async function criarMotivo(formData: FormData) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const texto = String(formData.get('texto') ?? '').trim()
   const ordemRaw = String(formData.get('ordem') ?? '').trim()
   const ordem = ordemRaw ? Number(ordemRaw) : 0
@@ -48,7 +48,7 @@ export async function criarMotivo(formData: FormData) {
 }
 
 export async function atualizarMotivo(formData: FormData) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const id = String(formData.get('id') ?? '')
   const texto = String(formData.get('texto') ?? '').trim()
   const ordemRaw = String(formData.get('ordem') ?? '').trim()
@@ -70,7 +70,7 @@ export async function atualizarMotivo(formData: FormData) {
 }
 
 export async function alternarMotivo(id: string, novoAtivo: boolean) {
-  const usuario = await requerirPerfil(['ADMIN'])
+  const usuario = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const supabase = await createClient()
 
   if (novoAtivo) {

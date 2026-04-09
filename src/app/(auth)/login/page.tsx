@@ -29,8 +29,9 @@ export default async function LoginPage({ searchParams }: Props) {
       .eq('id', user.id)
       .single()
     if (usuario) {
-      if (usuario.perfil === 'ADMIN') redirect('/admin')
-      if (usuario.perfil === 'DIRECAO') redirect('/direcao')
+      if (usuario.perfil === 'ADMIN' || usuario.perfil === 'DIRECAO') {
+        redirect('/painel')
+      }
       if (usuario.perfil === 'GESTOR_AGENCIA') redirect('/agencia')
     }
   }

@@ -55,7 +55,7 @@ export async function aprovarAnomalia(anomaliaId: string) {
 
   revalidatePath('/agencia/anomalias')
   revalidatePath('/agencia')
-  revalidatePath('/direcao')
+  revalidatePath('/painel')
   return { ok: true }
 }
 
@@ -107,6 +107,6 @@ export async function rejeitarAnomalia(anomaliaId: string) {
 
   revalidatePath('/agencia/anomalias')
   revalidatePath('/agencia')
-  revalidatePath('/direcao')
+  revalidatePath('/painel')
   return { ok: true }
 }

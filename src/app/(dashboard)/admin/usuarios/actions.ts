@@ -20,7 +20,7 @@ function gerarSenhaAleatoria(tamanho = 16): string {
 }
 
 export async function criarUsuario(formData: FormData) {
-  const autor = await requerirPerfil(['ADMIN'])
+  const autor = await requerirPerfil(['ADMIN', 'DIRECAO'])
 
   const nome = String(formData.get('nome') ?? '').trim()
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
@@ -93,7 +93,7 @@ export async function criarUsuario(formData: FormData) {
 }
 
 export async function atualizarUsuario(formData: FormData) {
-  const autor = await requerirPerfil(['ADMIN'])
+  const autor = await requerirPerfil(['ADMIN', 'DIRECAO'])
 
   const id = String(formData.get('id') ?? '')
   const nome = String(formData.get('nome') ?? '').trim()
@@ -127,7 +127,7 @@ export async function atualizarUsuario(formData: FormData) {
 }
 
 export async function alternarUsuario(id: string, novoAtivo: boolean) {
-  const autor = await requerirPerfil(['ADMIN'])
+  const autor = await requerirPerfil(['ADMIN', 'DIRECAO'])
 
   // Proteção: admin não pode desativar a si mesmo
   if (id === autor.id && !novoAtivo) {
@@ -147,7 +147,7 @@ export async function alternarUsuario(id: string, novoAtivo: boolean) {
 }
 
 export async function resetarSenhaUsuario(id: string) {
-  const autor = await requerirPerfil(['ADMIN'])
+  const autor = await requerirPerfil(['ADMIN', 'DIRECAO'])
   const supabase = await createClient()
 
   // Buscar usuário alvo pra garantir que é do mesmo banco
