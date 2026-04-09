@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { requerirPerfil } from '@/lib/auth'
+import { getAppUrl } from '@/lib/appUrl'
 import { GerentesClient } from './GerentesClient'
 
 export default async function GerentesPage() {
@@ -19,13 +20,11 @@ export default async function GerentesPage() {
       .order('codigo'),
   ])
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-
   return (
     <GerentesClient
       gerentes={gerentes ?? []}
       agencias={agencias ?? []}
-      appUrl={appUrl}
+      appUrl={getAppUrl()}
     />
   )
 }
