@@ -1,4 +1,8 @@
+'use client'
+
 import Link from 'next/link'
+import { Tooltip } from '@/components/ui/Tooltip'
+import { GLOSSARIO } from '@/lib/glossario'
 
 type Props = {
   total: number
@@ -17,8 +21,19 @@ export function AlertaAnomalia({ total, href }: Props) {
           ⚠
         </div>
         <div>
-          <div className="text-sm font-semibold text-amber-900">
+          <div className="flex items-center gap-1.5 text-sm font-semibold text-amber-900">
             {total} {total === 1 ? 'anomalia aberta' : 'anomalias abertas'}
+            <Tooltip content={GLOSSARIO.anomalia.curto} width="wide">
+              <span
+                className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-200 text-[10px] font-bold text-amber-700"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+              >
+                ?
+              </span>
+            </Tooltip>
           </div>
           <div className="text-xs text-amber-700">
             Avaliações em quarentena aguardando revisão.

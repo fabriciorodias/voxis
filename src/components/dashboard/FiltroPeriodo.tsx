@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import type { Periodo } from '@/lib/queries'
+import { InfoIcon } from '@/components/ui/InfoIcon'
+import { GLOSSARIO } from '@/lib/glossario'
 
 type Props = {
   atual: Periodo
@@ -15,23 +17,26 @@ const OPCOES: { valor: Periodo; label: string }[] = [
 
 export function FiltroPeriodo({ atual, basePath }: Props) {
   return (
-    <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm">
-      {OPCOES.map((o) => {
-        const ativo = o.valor === atual
-        return (
-          <Link
-            key={o.valor}
-            href={`${basePath}?periodo=${o.valor}`}
-            className={`rounded-md px-3 py-1 transition ${
-              ativo
-                ? 'bg-[var(--color-primary)] font-semibold text-white'
-                : 'text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            {o.label}
-          </Link>
-        )
-      })}
+    <div className="flex items-center gap-1.5">
+      <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm">
+        {OPCOES.map((o) => {
+          const ativo = o.valor === atual
+          return (
+            <Link
+              key={o.valor}
+              href={`${basePath}?periodo=${o.valor}`}
+              className={`rounded-md px-3 py-1 transition ${
+                ativo
+                  ? 'bg-[var(--color-primary)] font-semibold text-white'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {o.label}
+            </Link>
+          )
+        })}
+      </div>
+      <InfoIcon content={GLOSSARIO.periodo.curto} width="wide" />
     </div>
   )
 }

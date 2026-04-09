@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import type { LinhaRankingGR } from '@/lib/queries'
+import { InfoIcon } from '@/components/ui/InfoIcon'
+import { GLOSSARIO } from '@/lib/glossario'
 
 type Props = {
   linhas: LinhaRankingGR[]
@@ -31,9 +33,19 @@ export function RankingGRs({ linhas }: Props) {
               <tr className="border-b border-gray-100 text-left text-xs uppercase text-gray-400">
                 <th className="pb-2 pr-4 font-medium">#</th>
                 <th className="pb-2 pr-4 font-medium">Gerente</th>
-                <th className="pb-2 pr-4 font-medium text-right">NPS</th>
+                <th className="pb-2 pr-4 font-medium text-right">
+                  <span className="inline-flex items-center justify-end gap-1">
+                    NPS
+                    <InfoIcon content={GLOSSARIO.nps.curto} width="wide" />
+                  </span>
+                </th>
                 <th className="pb-2 pr-4 font-medium text-right">Respostas</th>
-                <th className="pb-2 pr-4 font-medium text-right">Δ</th>
+                <th className="pb-2 pr-4 font-medium text-right">
+                  <span className="inline-flex items-center justify-end gap-1">
+                    Δ
+                    <InfoIcon content={GLOSSARIO.delta.curto} width="wide" />
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

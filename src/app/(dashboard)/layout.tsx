@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '../(auth)/login/actions'
+import { GrupoDropdown } from '@/components/nav/GrupoDropdown'
 
 type PerfilNav = 'ADMIN' | 'DIRECAO' | 'GESTOR_AGENCIA'
 
@@ -99,7 +100,17 @@ export default async function DashboardLayout({
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-right text-xs">
+            <Link
+              href="/ajuda"
+              title="Ajuda e glossário"
+              className="hidden rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:inline-flex sm:items-center sm:gap-1"
+            >
+              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-600">
+                ?
+              </span>
+              Ajuda
+            </Link>
+            <div className="hidden text-right text-xs sm:block">
               <div className="font-medium text-gray-900">{usuario.nome}</div>
               <div className="text-gray-500">{perfil}</div>
             </div>
@@ -139,6 +150,12 @@ export default async function DashboardLayout({
               </Link>,
             ]
           })}
+          <Link
+            href="/ajuda"
+            className="shrink-0 text-sm text-gray-600 hover:text-gray-900"
+          >
+            Ajuda
+          </Link>
         </nav>
       </header>
 
@@ -147,45 +164,3 @@ export default async function DashboardLayout({
   )
 }
 
-function GrupoDropdown({
-  label,
-  itens,
-}: {
-  label: string
-  itens: { href: string; label: string }[]
-}) {
-  return (
-    <div className="group relative">
-      <button
-        type="button"
-        className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
-      >
-        {label}
-        <svg
-          className="h-3 w-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </button>
-      <div className="invisible absolute left-0 top-full z-40 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
-        {itens.map((i) => (
-          <Link
-            key={i.href}
-            href={i.href}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-          >
-            {i.label}
-          </Link>
-        ))}
-      </div>
-    </div>
-  )
-}

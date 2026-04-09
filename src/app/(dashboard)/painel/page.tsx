@@ -18,6 +18,7 @@ import { TopMotivos } from '@/components/dashboard/TopMotivos'
 import { GraficoEvolucao } from '@/components/dashboard/GraficoEvolucao'
 import { AlertaAnomalia } from '@/components/dashboard/AlertaAnomalia'
 import { FiltroPeriodo } from '@/components/dashboard/FiltroPeriodo'
+import { IntroPainel } from '@/components/dashboard/IntroPainel'
 
 type Props = {
   searchParams: Promise<{ periodo?: string }>
@@ -63,6 +64,8 @@ export default async function PainelHome({ searchParams }: Props) {
         </div>
         <FiltroPeriodo atual={periodo} basePath="/painel" />
       </header>
+
+      <IntroPainel />
 
       <AlertaAnomalia total={anomalias.length} href="/agencia/anomalias" />
 
