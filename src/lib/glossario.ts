@@ -129,6 +129,17 @@ export const GLOSSARIO: Record<string, Termo> = {
       'Para evitar que a mesma pessoa avalie o mesmo GR múltiplas vezes em sequência (o que distorceria o NPS), o sistema armazena apenas hashes criptográficos do dispositivo, IP e user-agent. Esses hashes não são reversíveis — não dá pra recuperar o dado original a partir deles.',
     ],
   },
+  rateLimit: {
+    id: 'rateLimit',
+    titulo: 'Rate limit de 24h',
+    curto:
+      'O mesmo cliente não consegue avaliar o mesmo GR duas vezes em 24h — checagem em 3 camadas (cookie, fingerprint e IP+navegador).',
+    longo: [
+      'Para proteger o indicador contra reavaliações do mesmo cliente, o Voxis bloqueia novas avaliações do mesmo GR pelo mesmo cliente dentro de uma janela de 24h.',
+      'A checagem usa 3 camadas que atuam em OR lógico: (1) cookie HTTP-only gravado após o envio, (2) fingerprint do dispositivo calculado no navegador, e (3) combinação de hash do IP e do user agent. Qualquer uma que bata é suficiente para bloquear.',
+      'Essa abordagem em camadas cobre até mesmo o caso de alguém abrir uma janela anônima tentando "resetar" a proteção — o IP e o user agent continuam os mesmos entre modos do navegador.',
+    ],
+  },
   periodo: {
     id: 'periodo',
     titulo: 'Filtro de período',

@@ -1,9 +1,11 @@
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import {
   verificarRateLimit,
   detectarRajada,
-  hashString,
+  hashesDaRequisicao,
+  nomeCookieAvaliou,
 } from '@/lib/antifraude'
 
 type SubmitBody = {
@@ -13,6 +15,8 @@ type SubmitBody = {
   motivos?: string[]
   motivo_outro?: string
 }
+
+const VINTE_QUATRO_HORAS_SEG = 24 * 60 * 60
 
 export async function POST(request: Request) {
   try {
@@ -26,10 +30,7 @@ export async function POST(request: Request) {
       nota > 10 ||
       !device_hash
     ) {
-      return NextResponse.json(
-        { error: 'Payload inválido' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Payload inválido' }, { status: 400 })
     }
 
     const supabase = await createClient()
@@ -48,8 +49,19 @@ export async function POST(request: Request) {
       )
     }
 
-    // 2. Rate limit
-    const { permitido } = await verificarRateLimit(supabase, gr_id, device_hash)
+    // 2. Preparar sinais de rate limit
+    const cookieStore = await cookies()
+    const nomeCookie = nomeCookieAvaliou(gr_id)
+    const temCookieRecente = !!cookieStore.get(nomeCookie)
+    const { ipHash, userAgentHash } = await hashesDaRequisicao(request.headers)
+
+    // 3. Rate limit (3 camadas: cookie, device_hash, ip+ua)
+    const { permitido } = await verificarRateLimit(supabase, gr_id, {
+      deviceHash: device_hash,
+      ipHash,
+      userAgentHash,
+      temCookieRecente,
+    })
     if (!permitido) {
       return NextResponse.json(
         { error: 'Avaliação já registrada nas últimas 24h' },
@@ -57,19 +69,10 @@ export async function POST(request: Request) {
       )
     }
 
-    // 3. Detectar rajada
+    // 4. Detectar rajada
     const rajada = await detectarRajada(supabase, gr_id)
     const status: 'VALIDA' | 'QUARENTENA' = rajada ? 'QUARENTENA' : 'VALIDA'
     const motivoQuarentena = rajada ? 'RAJADA_10MIN' : null
-
-    // 4. Hash de IP e user agent (best-effort)
-    const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-      request.headers.get('x-real-ip') ??
-      null
-    const ua = request.headers.get('user-agent') ?? null
-    const ipHash = ip ? await hashString(ip) : null
-    const uaHash = ua ? await hashString(ua) : null
 
     // 5. Inserir avaliação
     const { data: avaliacao, error: insErr } = await supabase
@@ -81,7 +84,7 @@ export async function POST(request: Request) {
         nota,
         dispositivo_hash: device_hash,
         ip_hash: ipHash,
-        user_agent_hash: uaHash,
+        user_agent_hash: userAgentHash,
         status,
         motivo_quarentena: motivoQuarentena,
       })
@@ -137,6 +140,17 @@ export async function POST(request: Request) {
       })
       if (anomErr) console.error('[submit] insert anomalia:', anomErr)
     }
+
+    // 8. Gravar cookie HTTP-only de 24h como camada adicional de rate limit.
+    //    Mesmo em modo anônimo, este cookie persiste dentro da sessão anônima
+    //    e evita reavaliação imediata por refresh.
+    cookieStore.set(nomeCookie, '1', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: VINTE_QUATRO_HORAS_SEG,
+      path: '/',
+    })
 
     return NextResponse.json({ success: true })
   } catch (err) {

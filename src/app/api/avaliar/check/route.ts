@@ -1,6 +1,11 @@
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { verificarRateLimit } from '@/lib/antifraude'
+import {
+  verificarRateLimit,
+  hashesDaRequisicao,
+  nomeCookieAvaliou,
+} from '@/lib/antifraude'
 
 export async function POST(request: Request) {
   try {
@@ -17,8 +22,18 @@ export async function POST(request: Request) {
       )
     }
 
+    const cookieStore = await cookies()
+    const temCookieRecente = !!cookieStore.get(nomeCookieAvaliou(gr_id))
+
+    const { ipHash, userAgentHash } = await hashesDaRequisicao(request.headers)
+
     const supabase = await createClient()
-    const { permitido } = await verificarRateLimit(supabase, gr_id, device_hash)
+    const { permitido } = await verificarRateLimit(supabase, gr_id, {
+      deviceHash: device_hash,
+      ipHash,
+      userAgentHash,
+      temCookieRecente,
+    })
 
     return NextResponse.json({ permitido })
   } catch (err) {
