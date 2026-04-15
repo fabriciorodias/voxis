@@ -92,7 +92,7 @@ export default async function DrillDownAgencia({
         />
       </header>
 
-      <AlertaAnomalia total={anomalias.length} href="/agencia/anomalias" />
+      <AlertaAnomalia total={anomalias.length} href="/painel/anomalias" />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-1">
